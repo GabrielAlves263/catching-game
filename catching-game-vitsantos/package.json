@@ -1,0 +1,9 @@
+{
+  "dependencies": {
+    "cannon-es": "^0.20.0",
+    "three": "^0.178.0"
+  },
+  "devDependencies": {
+    "vite": "^7.0.4"
+  }
+}

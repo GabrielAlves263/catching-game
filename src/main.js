@@ -44,8 +44,9 @@ function spawnBall(type) {
     shape: sphereShape,
     position: new CANNON.Vec3((Math.random() - 0.5) * 10, 10, 0),
     linearDamping: 0.3,
-    ballType: type, // Armazenamos o tipo na bola física
   });
+
+  ballBody.ballType = type;
 
   world.addBody(ballBody);
 
@@ -81,7 +82,7 @@ function init() {
   basketBody.addShape(basketLeft, new CANNON.Vec3(-1.5, 0.5, 0));
   basketBody.addShape(basketRight, new CANNON.Vec3(1.5, 0.5, 0));
   basketBody.addShape(basketBack, new CANNON.Vec3(0, 0.5, -1));
-  basketBody.addShape(basketBase, new CANNON.Vec3(-1.5, 0.5, 1.5));
+  basketBody.addShape(basketBase, new CANNON.Vec3(0, 0, 0));
   world.addBody(basketBody);
 
   // Cesta (visual)
@@ -166,6 +167,8 @@ function animate() {
 
     if (dentroDoX && dentroDoZ && dentroDoY) {
       // Atualizar pontuação baseada no tipo de bola
+      console.log(ball);
+
       score += ball.ballType.score;
       scoreElement.textContent = `Pontuação: ${score}`;
 

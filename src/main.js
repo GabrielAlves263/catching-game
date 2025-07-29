@@ -1,5 +1,6 @@
 import * as CANNON from "cannon-es";
 import * as THREE from "three";
+import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 import camera from "./core/camera";
 import { ambientLight, directionalLight } from "./core/lights";
 import renderer from "./core/renderer";
@@ -86,43 +87,20 @@ function init() {
   world.addBody(basketBody);
 
   // Cesta (visual)
-  basketMesh = new THREE.Group();
+  const loader = new GLTFLoader();
 
-  // Base da cesta (visual apenas)
-  const baseSide = new THREE.Mesh(
-    new THREE.BoxGeometry(3, 0.1, 2),
-    new THREE.MeshStandardMaterial({
-      color: 0xff9800,
-      transparent: true,
-      opacity: 0.5,
-    })
+  loader.load(
+    "../public/models/a_cardboard_box.glb",
+    function (gltf) {
+      basketMesh = gltf.scene;
+      basketMesh.scale.set(4, 2, 1);
+      scene.add(basketMesh);
+    },
+    undefined, // You can add a progress function here if you want
+    function (error) {
+      console.error("An error happened while loading the model:", error);
+    }
   );
-  basketMesh.add(baseSide);
-
-  // Laterais visuais da cesta
-  const sideGeometry = new THREE.BoxGeometry(0.4, 1, 2);
-  const leftSide = new THREE.Mesh(
-    sideGeometry,
-    new THREE.MeshStandardMaterial({ color: 0xff9800 })
-  );
-  leftSide.position.set(-1.5, 0.5, 0);
-  basketMesh.add(leftSide);
-
-  const rightSide = new THREE.Mesh(
-    sideGeometry,
-    new THREE.MeshStandardMaterial({ color: 0xff9800 })
-  );
-  rightSide.position.set(1.5, 0.5, 0);
-  basketMesh.add(rightSide);
-
-  const backSide = new THREE.Mesh(
-    new THREE.BoxGeometry(3, 1, 0.4),
-    new THREE.MeshStandardMaterial({ color: 0xff9800 })
-  );
-  backSide.position.set(0, 0.5, -1);
-  basketMesh.add(backSide);
-
-  scene.add(basketMesh);
 
   // Eventos de teclado
   window.addEventListener("keydown", (e) => (keys[e.key] = true));
@@ -167,8 +145,6 @@ function animate() {
 
     if (dentroDoX && dentroDoZ && dentroDoY) {
       // Atualizar pontuação baseada no tipo de bola
-      console.log(ball);
-
       score += ball.ballType.score;
       scoreElement.textContent = `Pontuação: ${score}`;
 

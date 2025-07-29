@@ -136,7 +136,7 @@ function init() {
   world.addBody(basketBody);
 
   // Zona de pontuação, pra evitar erros de colisão
-  const scoreZoneShape = new CANNON.Box(new CANNON.Vec3(1.8, 0.1, 1.8));
+  const scoreZoneShape = new CANNON.Box(new CANNON.Vec3(1, 0.1, 1));
   scoreZoneBody = new CANNON.Body({
     mass: 0,
     shape: scoreZoneShape,

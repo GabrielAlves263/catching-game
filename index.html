@@ -1,13 +1,38 @@
 <!DOCTYPE html>
-<html lang="p">
+<html lang="pt-br">
   <head>
-    <meta charset="utf-8">
+    <meta charset="utf-8" />
     <title>Catching Game</title>
     <style>
-      body { margin: 0; }
+      body {
+        margin: 0;
+        font-family: Arial, sans-serif;
+      }
+
+      /* Caixa com os comandos no canto inferior esquerdo */
+      .comandos {
+        position: absolute;
+        bottom: 10px;
+        left: 10px;
+        background-color: rgba(0, 0, 0, 0.6);
+        color: #fff;
+        padding: 10px 15px;
+        border-radius: 8px;
+        font-size: 14px;
+        line-height: 1.5;
+        max-width: 220px;
+        z-index: 10;
+      }
     </style>
   </head>
   <body>
+    <!-- Tela de comandos -->
+    <div class="comandos">
+      <strong>Comandos:</strong><br />
+      ← → : mover cesto<br />
+      Espaço: pausar/despausar
+    </div>
+
     <script type="module" src="src/main.js"></script>
   </body>
 </html>

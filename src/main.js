@@ -7,7 +7,7 @@ import { ambientLight, directionalLight } from "./core/lights";
 import renderer from "./core/renderer";
 import scene from "./core/scene";
 import { groundMesh, world } from "./core/world";
-import { BALL_TYPES } from "./data/ballTypes";
+import { BALL_TYPES, FRUIT_TYPES_ARRAY } from "./data/ballTypes";
 
 const MAX_BALLS = 20;
 
@@ -59,8 +59,14 @@ function spawnRandomBall() {
   if (balls.length >= MAX_BALLS) {
     removeOldestBall();
   }
-  // 70% de chance de ser fruta, 30% de chance de ser lixo
-  const type = Math.random() < 0.7 ? BALL_TYPES.FRUIT : BALL_TYPES.TRASH;
+
+  let type;
+  if (Math.random() < 0.7) {
+    const randomIndex = Math.floor(Math.random() * FRUIT_TYPES_ARRAY.length);
+    type = FRUIT_TYPES_ARRAY[randomIndex];
+  } else {
+    type = BALL_TYPES.TRASH;
+  }
   spawnBall(type);
 }
 
@@ -76,7 +82,8 @@ function removeOldestBall() {
 }
 
 function spawnBall(type) {
-  const radius = 1;
+  const radius = type.radius;
+
   const sphereShape = new CANNON.Sphere(radius);
   const ballBody = new CANNON.Body({
     mass: 1,
@@ -86,15 +93,16 @@ function spawnBall(type) {
   });
 
   ballBody.ballType = type;
-
   world.addBody(ballBody);
 
   let ballMesh;
   const sphereGeometry = new THREE.SphereGeometry(radius, 32, 32);
 
-  if (type === BALL_TYPES.FRUIT) {
+  if (type.texture) {
     const textureLoader = new THREE.TextureLoader();
-    const fruitTexture = textureLoader.load("../public/textures/fruit.jpg");
+    const fruitTexture = textureLoader.load(type.texture);
+    fruitTexture.wrapS = THREE.MirroredRepeatWrapping;
+    fruitTexture.wrapT = THREE.MirroredRepeatWrapping;
     const fruitMaterial = new THREE.MeshStandardMaterial({ map: fruitTexture });
     ballMesh = new THREE.Mesh(sphereGeometry, fruitMaterial);
   } else if (type === BALL_TYPES.TRASH) {
@@ -171,10 +179,11 @@ function init() {
   const loader = new GLTFLoader();
 
   loader.load(
-    "../public/models/a_cardboard_box.glb",
+    "../public/models/fruit_case.glb",
     function (gltf) {
       basketMesh = gltf.scene;
-      basketMesh.scale.set(5, 3, 3);
+      basketMesh.scale.set(8, 10, 5);
+      basketMesh.position.y = 20;
       scene.add(basketMesh);
     },
     undefined, // You can add a progress function here if you want

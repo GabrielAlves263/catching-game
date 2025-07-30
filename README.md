@@ -8,8 +8,8 @@ Projeto desenvolvido para a disciplina de Computação Gráfica do curso de Enge
 - Jose Gabriel Alves de Paula
 - Kaique Damasceno Sousa 
 - Luis Felipe Pereira Furtado
-- Pamela Maria Pontes Frota
-- Vitoria Emilly Santos Melo
+- Pâmela Maria Pontes Frota
+- Vitória Emilly Santos Melo
 
 
 ---

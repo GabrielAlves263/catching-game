@@ -36,6 +36,7 @@ let audioListener;
 let scoreSound;
 let trashSound;
 let top5Sound;
+let backgroundSound;
 const audioLoader = new AudioLoader();
 
 //variaveis do cronometro
@@ -168,7 +169,7 @@ function init() {
   audioLoader.load("../public/sounds/score.mp3", (buffer) => {
     scoreSound = new Audio(audioListener);
     scoreSound.setBuffer(buffer);
-    scoreSound.setVolume(0.5);
+    scoreSound.setVolume(0.1);
   });
 
   audioLoader.load("../public/sounds/trash.mp3", (buffer) => {
@@ -181,6 +182,12 @@ function init() {
     top5Sound = new Audio(audioListener);
     top5Sound.setBuffer(buffer);
     top5Sound.setVolume(0.2);
+  });
+
+  audioLoader.load("../public/sounds/background_music.mp3", (buffer) => {
+    backgroundSound = new Audio(audioListener);
+    backgroundSound.setBuffer(buffer);
+    backgroundSound.setVolume(0.2);
   });
 
   // Zona de pontuação, pra evitar erros de colisão
@@ -210,7 +217,7 @@ function init() {
         scoreElement.textContent = `Pontuação: ${score}`;
 
         // Toca o som correspondente
-        if (ballBody.ballType === BALL_TYPES.FRUIT && scoreSound) {
+        if (FRUIT_TYPES_ARRAY.includes(ballBody.ballType) && scoreSound) {
           scoreSound.play();
         } else if (ballBody.ballType === BALL_TYPES.TRASH && trashSound) {
           trashSound.play();

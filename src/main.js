@@ -8,6 +8,8 @@ import renderer from "./core/renderer";
 import scene from "./core/scene";
 import { groundMesh, world } from "./core/world";
 import { BALL_TYPES } from "./data/ballTypes";
+import * as dat from 'dat.gui';
+import './style.css';
 
 const MAX_BALLS = 20;
 
@@ -27,6 +29,32 @@ const cannonDebugger = new CannonDebugger(scene, world, {
     mesh.visible = isDebugOn;
     debugMeshes.push(mesh);
   },
+});
+
+// GUI CONTROLS
+const gui = new dat.GUI();
+
+const physicsSettings = {
+  gravity: -9.82,
+  ballSpeed: 10,
+};
+
+const levelSettings = {
+  Nível: 'Fácil'
+};
+
+const niveis = {
+  Fácil: { gravity: -9.82, ballSpeed: 10 },
+  Médio: { gravity: -30, ballSpeed: 25 },
+  Difícil: { gravity: -60, ballSpeed: 40 },
+  Insano: { gravity: -100, ballSpeed: 70 }
+};
+
+gui.add(levelSettings, 'Nível', Object.keys(niveis)).onChange((nivel) => {
+  const config = niveis[nivel];
+  physicsSettings.gravity = config.gravity;
+  physicsSettings.ballSpeed = config.ballSpeed;
+  world.gravity.set(0, config.gravity, 0);
 });
 
 // Tecla d para mostrar/ocultas os helpers de debug
@@ -81,7 +109,7 @@ function spawnBall(type) {
   const ballBody = new CANNON.Body({
     mass: 1,
     shape: sphereShape,
-    position: new CANNON.Vec3((Math.random() - 0.5) * 10, 10, 0),
+    position: new CANNON.Vec3((Math.random() - 0.5) * 10, physicsSettings.ballSpeed, 0),
     linearDamping: 0.3,
   });
 

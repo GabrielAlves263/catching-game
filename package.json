@@ -13,6 +13,7 @@
     "vite": "^7.0.4"
   },
   "dependencies": {
-    "cannon-es-debugger": "^1.0.0"
+    "cannon-es-debugger": "^1.0.0",
+    "dat.gui": "^0.7.9"
   }
 }

@@ -15,6 +15,7 @@ const MAX_BALLS = 20;
 let basketBody, basketMesh;
 const balls = [];
 const ballMeshes = [];
+const objectsToRemove = [];
 const keys = {};
 let score = 0;
 let scoreElement;
@@ -196,28 +197,29 @@ function init() {
     const ballBody = event.body;
 
     if (ballBody.ballType) {
-      const index = balls.findIndex((b) => b.id === ballBody.id);
+      if (!objectsToRemove.some((obj) => obj.body.id === ballBody.id)) {
+        const index = balls.findIndex((b) => b.id === ballBody.id);
+        if (index !== -1) {
+          objectsToRemove.push({
+            body: balls[index],
+            mesh: ballMeshes[index].mesh,
+          });
+        }
 
-      if (index !== -1) {
-        world.removeBody(balls[index]);
-        scene.remove(ballMeshes[index].mesh);
-        balls.splice(index, 1);
-        ballMeshes.splice(index, 1);
+        score += ballBody.ballType.score;
+        scoreElement.textContent = `Pontuação: ${score}`;
+
+        // Toca o som correspondente
+        if (ballBody.ballType === BALL_TYPES.FRUIT && scoreSound) {
+          scoreSound.play();
+        } else if (ballBody.ballType === BALL_TYPES.TRASH && trashSound) {
+          trashSound.play();
+        }
+
+        scoreElement.style.color =
+          ballBody.ballType.score > 0 ? "#4CAF50" : "#F44336";
+        setTimeout(() => (scoreElement.style.color = "white"), 300);
       }
-
-      score += ballBody.ballType.score;
-      scoreElement.textContent = `Pontuação: ${score}`;
-
-      // Toca o som correspondente
-      if (ballBody.ballType === BALL_TYPES.FRUIT && scoreSound) {
-        scoreSound.play();
-      } else if (ballBody.ballType === BALL_TYPES.TRASH && trashSound) {
-        trashSound.play();
-      }
-
-      scoreElement.style.color =
-        ballBody.ballType.score > 0 ? "#4CAF50" : "#F44336";
-      setTimeout(() => (scoreElement.style.color = "white"), 300);
     }
   });
 
@@ -344,6 +346,17 @@ function animate() {
     // Atualizar posição visual
     ballData.mesh.position.copy(ball.position);
     ballData.mesh.quaternion.copy(ball.quaternion);
+  }
+
+  for (const obj of objectsToRemove) {
+    world.removeBody(obj.body);
+    scene.remove(obj.mesh);
+
+    const index = balls.findIndex((b) => b.id === obj.body.id);
+    if (index !== -1) {
+      balls.splice(index, 1);
+      ballMeshes.splice(index, 1);
+    }
   }
 
   cannonDebugger.update();

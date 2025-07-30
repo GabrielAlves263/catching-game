@@ -9,6 +9,7 @@ import scene from "./core/scene";
 import { groundMesh, world } from "./core/world";
 import { BALL_TYPES } from "./data/ballTypes";
 import { AudioLoader, AudioListener, Audio } from 'three';
+import { getRandomFruitType, loadModels} from "./data/fruitTypes";
 
 const MAX_BALLS = 20;
 
@@ -93,42 +94,42 @@ function removeOldestBall() {
 }
 
 function spawnBall(type) {
-  const radius = 1;
-  const sphereShape = new CANNON.Sphere(radius);
-  const ballBody = new CANNON.Body({
-    mass: 1,
-    shape: sphereShape,
-    position: new CANNON.Vec3((Math.random() - 0.5) * 10, 10, 0),
-    linearDamping: 0.3,
-  });
+  const fruitType = getRandomFruitType(); // Obtenha um tipo de fruta sorteado
+  //const trashType = getRandomTrashType();
+    const radius = fruitType.radius; // Use o raio definido na fruta sorteada
+    const sphereShape = new CANNON.Sphere(radius);
+    const ballBody = new CANNON.Body({
+        mass: 1,
+        shape: sphereShape,
+        position: new CANNON.Vec3((Math.random() - 0.5) * 10, 10, 0),
+        linearDamping: 0.3,
+    });
 
-  ballBody.ballType = type;
+    // Anexar o tipo de fruta ao corpo físico para referência posterior (ex: pontuação
 
-  world.addBody(ballBody);
+    world.addBody(ballBody);
 
   let ballMesh;
-  const sphereGeometry = new THREE.SphereGeometry(radius, 32, 32);
 
-  if (type === BALL_TYPES.FRUIT) {
-    const textureLoader = new THREE.TextureLoader();
-    const fruitTexture = textureLoader.load("../public/textures/fruit.jpg");
-    const fruitMaterial = new THREE.MeshStandardMaterial({ map: fruitTexture });
-    ballMesh = new THREE.Mesh(sphereGeometry, fruitMaterial);
-  } else if (type === BALL_TYPES.TRASH) {
-    const trashMaterial = new THREE.MeshStandardMaterial({ color: type.color });
-    ballMesh = new THREE.Mesh(sphereGeometry, trashMaterial);
-  }
+    if(type === BALL_TYPES.FRUIT) {
+      ballBody.ballType = fruitType;
+      ballMesh = fruitType.createMesh();
+    } else if(type === BALL_TYPES.TRASH) {
+      const sphereGeometry = new THREE.SphereGeometry(1, 32, 32);
+      const trashMaterial = new THREE.MeshStandardMaterial({ color: type.color });
+      ballMesh = new THREE.Mesh(sphereGeometry, trashMaterial);
+      ballBody.ballType = type;
+    }
+    scene.add(ballMesh);
 
-  scene.add(ballMesh);
-
-  balls.push(ballBody);
-  ballMeshes.push({ mesh: ballMesh, type: type });
+    balls.push(ballBody);
+    ballMeshes.push({ mesh: ballMesh, type: type });
 }
 
 function init() {
   addScore();
   addTimer();
-
+  loadModels();
 
   startTimer();
 
@@ -213,7 +214,7 @@ function init() {
       scoreElement.textContent = `Pontuação: ${score}`;
 
       // Toca o som correspondente
-      if (ballBody.ballType === BALL_TYPES.FRUIT && scoreSound) {
+      if (ballBody.ballType === fruitType && scoreSound) {
         scoreSound.play();
       } else if (ballBody.ballType === BALL_TYPES.TRASH && trashSound) {
         trashSound.play();
@@ -318,7 +319,7 @@ function stopTimer() {
   window.addEventListener("keyup", (e) => (keys[e.key] = false));
 
   // Gerar bolas aleatórias
-  setInterval(spawnRandomBall, 1500);
+  setInterval(spawnRandomBall, 1800);
 }
 
 function animate() {

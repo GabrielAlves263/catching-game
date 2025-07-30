@@ -30,6 +30,75 @@ function addScore() {
   document.body.appendChild(scoreElement);
 }
 
+// Criação do botão (caso ainda não esteja criado)
+const pauseButton = document.createElement("button");
+pauseButton.style.position = "absolute";
+pauseButton.style.top = "20px";
+pauseButton.style.right = "20px";
+pauseButton.style.padding = "10px";
+pauseButton.style.border = "none";
+pauseButton.style.background = "transparent";
+pauseButton.style.cursor = "pointer";
+
+const pauseIcon = document.createElement("img");
+pauseIcon.src = "icons/pause.png"; // começa com pause
+pauseIcon.alt = "Pause";
+pauseIcon.style.width = "50px";
+pauseIcon.style.height = "50px";
+pauseButton.appendChild(pauseIcon);
+
+document.body.appendChild(pauseButton);
+
+// Alternar entre pause e play
+pauseButton.addEventListener("click", () => {
+  isPaused = !isPaused;
+  pauseIcon.src = isPaused ? "icons/play.png" : "icons/pause.png";
+  pauseIcon.alt = isPaused ? "Play" : "Pause";
+});
+
+window.addEventListener("keydown", (e) => {
+  if (e.code === "Space") {
+    e.preventDefault();
+    isPaused = !isPaused;
+    pauseIcon.src = isPaused ? "icons/play.png" : "icons/pause.png";
+    pauseIcon.alt = isPaused ? "Play" : "Pause";
+  }
+});
+
+let isPaused = false;
+
+
+//função pra mostrar mensagem de derrota 
+function showGameOver() {
+  const gameOverScreen = document.createElement("div");
+  gameOverScreen.style.position = "fixed";
+  gameOverScreen.style.top = "0";
+  gameOverScreen.style.left = "0";
+  gameOverScreen.style.width = "100%";
+  gameOverScreen.style.height = "100%";
+  gameOverScreen.style.backgroundColor = "rgba(0, 0, 0, 0.8)";
+  gameOverScreen.style.display = "flex";
+  gameOverScreen.style.flexDirection = "column";
+  gameOverScreen.style.justifyContent = "center";
+  gameOverScreen.style.alignItems = "center";
+  gameOverScreen.style.color = "white";
+  gameOverScreen.style.fontSize = "48px";
+  gameOverScreen.style.fontFamily = "Arial";
+  gameOverScreen.style.zIndex = "999";
+
+  gameOverScreen.innerHTML = `
+    <p>🪦 GAME OVER</p>
+    <button id="restartBtn" style="margin-top: 20px; font-size: 24px; padding: 10px 20px;">🔁 Jogar Novamente</button>
+  `;
+
+  document.body.appendChild(gameOverScreen);
+
+  document.getElementById("restartBtn").addEventListener("click", () => {
+    location.reload(); // recarrega a página
+  });
+}
+
+
 function spawnRandomBall() {
   // 70% de chance de ser fruta, 30% de chance de ser lixo
   const type = Math.random() < 0.7 ? BALL_TYPES.FRUIT : BALL_TYPES.TRASH;
@@ -134,6 +203,9 @@ function init() {
 
 function animate() {
   requestAnimationFrame(animate);
+
+  if (isPaused) return; // Se pausado, não atualiza o jogo
+
   world.step(1 / 60);
 
   // Controles da cesta

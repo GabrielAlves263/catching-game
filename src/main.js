@@ -1,6 +1,7 @@
 import * as CANNON from "cannon-es";
 import CannonDebugger from "cannon-es-debugger";
 import * as THREE from "three";
+import { Audio, AudioListener, AudioLoader } from "three";
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 import camera from "./core/camera";
 import { ambientLight, directionalLight } from "./core/lights";
@@ -28,6 +29,19 @@ const cannonDebugger = new CannonDebugger(scene, world, {
     debugMeshes.push(mesh);
   },
 });
+
+// variaveis de som
+let audioListener;
+let scoreSound;
+let trashSound;
+let top5Sound;
+const audioLoader = new AudioLoader();
+
+//variaveis do cronometro
+let startTime;
+let gameTime = 0;
+let timerInterval;
+let timerElement;
 
 // Tecla d para mostrar/ocultas os helpers de debug
 document.addEventListener("keydown", (event) => {
@@ -118,6 +132,9 @@ function spawnBall(type) {
 
 function init() {
   addScore();
+  addTimer();
+
+  startTimer();
 
   // Adiciona elementos na cena
   scene.add(directionalLight);
@@ -142,6 +159,28 @@ function init() {
   basketBody.addShape(basketBase, new CANNON.Vec3(0, -1, 0));
   basketBody.addShape(basketFront, new CANNON.Vec3(0, 0, 2));
   world.addBody(basketBody);
+
+  audioListener = new AudioListener();
+  camera.add(audioListener);
+
+  // Carrega os sons
+  audioLoader.load("../public/sounds/score.mp3", (buffer) => {
+    scoreSound = new Audio(audioListener);
+    scoreSound.setBuffer(buffer);
+    scoreSound.setVolume(0.5);
+  });
+
+  audioLoader.load("../public/sounds/trash.mp3", (buffer) => {
+    trashSound = new Audio(audioListener);
+    trashSound.setBuffer(buffer);
+    trashSound.setVolume(1.0);
+  });
+
+  audioLoader.load("../public/sounds/top5.mp3", (buffer) => {
+    top5Sound = new Audio(audioListener);
+    top5Sound.setBuffer(buffer);
+    top5Sound.setVolume(0.2);
+  });
 
   // Zona de pontuação, pra evitar erros de colisão
   const scoreZoneShape = new CANNON.Box(new CANNON.Vec3(1, 0.1, 1));
@@ -169,11 +208,85 @@ function init() {
       score += ballBody.ballType.score;
       scoreElement.textContent = `Pontuação: ${score}`;
 
+      // Toca o som correspondente
+      if (ballBody.ballType === BALL_TYPES.FRUIT && scoreSound) {
+        scoreSound.play();
+      } else if (ballBody.ballType === BALL_TYPES.TRASH && trashSound) {
+        trashSound.play();
+      }
+
       scoreElement.style.color =
         ballBody.ballType.score > 0 ? "#4CAF50" : "#F44336";
       setTimeout(() => (scoreElement.style.color = "white"), 300);
     }
   });
+
+  function addTimer() {
+    // Elemento do cronômetro
+    timerElement = document.createElement("div");
+    timerElement.style.position = "absolute";
+    timerElement.style.top = "60px"; // Abaixo do placar
+    timerElement.style.left = "20px";
+    timerElement.style.color = "white";
+    timerElement.style.fontSize = "24px";
+    timerElement.style.fontFamily = "Arial";
+    timerElement.style.backgroundColor = "rgba(0,0,0,0.5)";
+    timerElement.style.padding = "10px";
+    timerElement.style.borderRadius = "5px";
+    timerElement.textContent = "Tempo: 00:00";
+    document.body.appendChild(timerElement);
+  }
+
+  function startTimer() {
+    startTime = Date.now();
+    timerInterval = setInterval(updateTimer, 1000);
+  }
+
+  function updateTimer() {
+    const currentTime = Date.now();
+    gameTime = Math.floor((currentTime - startTime) / 1000); // Tempo em segundos
+
+    // Formata o tempo como MM:SS
+    const minutes = Math.floor(gameTime / 60);
+    const seconds = gameTime % 60;
+    const formattedTime = `${minutes.toString().padStart(2, "0")}:${seconds
+      .toString()
+      .padStart(2, "0")}`;
+
+    timerElement.textContent = `Tempo: ${formattedTime}`;
+
+    if (30 - gameTime <= 5 && 30 - gameTime >= 1) {
+      timerElement.style.color = "#FF5722";
+      timerElement.style.fontWeight = "bold";
+      timerElement.style.transform = "scale(1.2)";
+      timerElement.style.transition = "all 0.3s ease";
+
+      // Toca o som apenas uma vez quando restarem exatamente 5 segundos
+      if (30 - gameTime === 5 && top5Sound && !top5Sound.isPlaying) {
+        top5Sound.play();
+      }
+    } else {
+      timerElement.style.color = "white";
+      timerElement.style.fontWeight = "normal";
+      timerElement.style.transform = "scale(1)";
+    }
+    if (gameTime >= 30.1) {
+      stopTimer();
+      alert(`Parabéns! Você fez ${score} pontos!`);
+      restartTimer();
+    }
+  }
+
+  function restartTimer() {
+    stopTimer();
+    gameTime = 0;
+    score = 0;
+    startTimer();
+  }
+
+  function stopTimer() {
+    clearInterval(timerInterval);
+  }
 
   // Cesta (visual)
   const loader = new GLTFLoader();

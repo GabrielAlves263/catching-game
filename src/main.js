@@ -1,5 +1,7 @@
 import * as CANNON from "cannon-es";
+import CannonDebugger from "cannon-es-debugger";
 import * as THREE from "three";
+import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 import camera from "./core/camera";
 import { ambientLight, directionalLight } from "./core/lights";
 import renderer from "./core/renderer";
@@ -7,12 +9,35 @@ import scene from "./core/scene";
 import { groundMesh, world } from "./core/world";
 import { BALL_TYPES } from "./data/ballTypes";
 
+const MAX_BALLS = 20;
+
 let basketBody, basketMesh;
 const balls = [];
 const ballMeshes = [];
 const keys = {};
 let score = 0;
 let scoreElement;
+let scoreZoneBody;
+
+const debugMeshes = [];
+let isDebugOn = false;
+
+const cannonDebugger = new CannonDebugger(scene, world, {
+  onInit(body, mesh) {
+    mesh.visible = isDebugOn;
+    debugMeshes.push(mesh);
+  },
+});
+
+// Tecla d para mostrar/ocultas os helpers de debug
+document.addEventListener("keydown", (event) => {
+  if (event.key === "d") {
+    isDebugOn = !isDebugOn;
+    for (const mesh of debugMeshes) {
+      mesh.visible = isDebugOn;
+    }
+  }
+});
 
 function addScore() {
   // Elemento de pontuação
@@ -31,13 +56,27 @@ function addScore() {
 }
 
 function spawnRandomBall() {
+  if (balls.length >= MAX_BALLS) {
+    removeOldestBall();
+  }
   // 70% de chance de ser fruta, 30% de chance de ser lixo
   const type = Math.random() < 0.7 ? BALL_TYPES.FRUIT : BALL_TYPES.TRASH;
   spawnBall(type);
 }
 
+function removeOldestBall() {
+  const oldestBallBody = balls[0];
+  const oldestBallData = ballMeshes[0];
+
+  world.removeBody(oldestBallBody);
+  scene.remove(oldestBallData.mesh);
+
+  balls.shift();
+  ballMeshes.shift();
+}
+
 function spawnBall(type) {
-  const radius = 0.3;
+  const radius = 1;
   const sphereShape = new CANNON.Sphere(radius);
   const ballBody = new CANNON.Body({
     mass: 1,
@@ -50,10 +89,19 @@ function spawnBall(type) {
 
   world.addBody(ballBody);
 
-  const ballMesh = new THREE.Mesh(
-    new THREE.SphereGeometry(radius, 32, 32),
-    new THREE.MeshStandardMaterial({ color: type.color })
-  );
+  let ballMesh;
+  const sphereGeometry = new THREE.SphereGeometry(radius, 32, 32);
+
+  if (type === BALL_TYPES.FRUIT) {
+    const textureLoader = new THREE.TextureLoader();
+    const fruitTexture = textureLoader.load("../public/textures/fruit.jpg");
+    const fruitMaterial = new THREE.MeshStandardMaterial({ map: fruitTexture });
+    ballMesh = new THREE.Mesh(sphereGeometry, fruitMaterial);
+  } else if (type === BALL_TYPES.TRASH) {
+    const trashMaterial = new THREE.MeshStandardMaterial({ color: type.color });
+    ballMesh = new THREE.Mesh(sphereGeometry, trashMaterial);
+  }
+
   scene.add(ballMesh);
 
   balls.push(ballBody);
@@ -69,60 +117,71 @@ function init() {
   scene.add(groundMesh);
 
   // Cesta (física - apenas laterais)
-  const basketLeft = new CANNON.Box(new CANNON.Vec3(0.2, 0.5, 1));
-  const basketRight = new CANNON.Box(new CANNON.Vec3(0.2, 0.5, 1));
-  const basketBack = new CANNON.Box(new CANNON.Vec3(1.5, 0.5, 0.2));
-  const basketBase = new CANNON.Box(new CANNON.Vec3(1.5, 0.05, 1));
+  const basketLeft = new CANNON.Box(new CANNON.Vec3(0.01, 1, 2));
+  const basketRight = new CANNON.Box(new CANNON.Vec3(0.01, 1, 2));
+  const basketBack = new CANNON.Box(new CANNON.Vec3(2, 1, 0.01));
+  const basketBase = new CANNON.Box(new CANNON.Vec3(2, 0.1, 2));
+  const basketFront = new CANNON.Box(new CANNON.Vec3(2, 1, 0.01));
 
   basketBody = new CANNON.Body({
     mass: 0,
     position: new CANNON.Vec3(0, 1, 0),
   });
 
-  basketBody.addShape(basketLeft, new CANNON.Vec3(-1.5, 0.5, 0));
-  basketBody.addShape(basketRight, new CANNON.Vec3(1.5, 0.5, 0));
-  basketBody.addShape(basketBack, new CANNON.Vec3(0, 0.5, -1));
-  basketBody.addShape(basketBase, new CANNON.Vec3(0, 0, 0));
+  basketBody.addShape(basketLeft, new CANNON.Vec3(-2, 0, 0));
+  basketBody.addShape(basketRight, new CANNON.Vec3(2, 0, 0));
+  basketBody.addShape(basketBack, new CANNON.Vec3(0, 0, -2));
+  basketBody.addShape(basketBase, new CANNON.Vec3(0, -1, 0));
+  basketBody.addShape(basketFront, new CANNON.Vec3(0, 0, 2));
   world.addBody(basketBody);
 
+  // Zona de pontuação, pra evitar erros de colisão
+  const scoreZoneShape = new CANNON.Box(new CANNON.Vec3(1, 0.1, 1));
+  scoreZoneBody = new CANNON.Body({
+    mass: 0,
+    shape: scoreZoneShape,
+    isTrigger: true,
+    collisionResponse: false,
+  });
+  world.addBody(scoreZoneBody);
+
+  scoreZoneBody.addEventListener("collide", function (event) {
+    const ballBody = event.body;
+
+    if (ballBody.ballType) {
+      const index = balls.findIndex((b) => b.id === ballBody.id);
+
+      if (index !== -1) {
+        world.removeBody(balls[index]);
+        scene.remove(ballMeshes[index].mesh);
+        balls.splice(index, 1);
+        ballMeshes.splice(index, 1);
+      }
+
+      score += ballBody.ballType.score;
+      scoreElement.textContent = `Pontuação: ${score}`;
+
+      scoreElement.style.color =
+        ballBody.ballType.score > 0 ? "#4CAF50" : "#F44336";
+      setTimeout(() => (scoreElement.style.color = "white"), 300);
+    }
+  });
+
   // Cesta (visual)
-  basketMesh = new THREE.Group();
+  const loader = new GLTFLoader();
 
-  // Base da cesta (visual apenas)
-  const baseSide = new THREE.Mesh(
-    new THREE.BoxGeometry(3, 0.1, 2),
-    new THREE.MeshStandardMaterial({
-      color: 0xff9800,
-      transparent: true,
-      opacity: 0.5,
-    })
+  loader.load(
+    "../public/models/a_cardboard_box.glb",
+    function (gltf) {
+      basketMesh = gltf.scene;
+      basketMesh.scale.set(5, 3, 3);
+      scene.add(basketMesh);
+    },
+    undefined, // You can add a progress function here if you want
+    function (error) {
+      console.error("An error happened while loading the model:", error);
+    }
   );
-  basketMesh.add(baseSide);
-
-  // Laterais visuais da cesta
-  const sideGeometry = new THREE.BoxGeometry(0.4, 1, 2);
-  const leftSide = new THREE.Mesh(
-    sideGeometry,
-    new THREE.MeshStandardMaterial({ color: 0xff9800 })
-  );
-  leftSide.position.set(-1.5, 0.5, 0);
-  basketMesh.add(leftSide);
-
-  const rightSide = new THREE.Mesh(
-    sideGeometry,
-    new THREE.MeshStandardMaterial({ color: 0xff9800 })
-  );
-  rightSide.position.set(1.5, 0.5, 0);
-  basketMesh.add(rightSide);
-
-  const backSide = new THREE.Mesh(
-    new THREE.BoxGeometry(3, 1, 0.4),
-    new THREE.MeshStandardMaterial({ color: 0xff9800 })
-  );
-  backSide.position.set(0, 0.5, -1);
-  basketMesh.add(backSide);
-
-  scene.add(basketMesh);
 
   // Eventos de teclado
   window.addEventListener("keydown", (e) => (keys[e.key] = true));
@@ -143,10 +202,18 @@ function animate() {
   basketBody.position.x = Math.max(-8, Math.min(8, basketBody.position.x));
 
   // Atualizar posição visual da cesta
-  basketMesh.position.copy(basketBody.position);
-  basketMesh.quaternion.copy(basketBody.quaternion);
+  if (basketMesh && basketBody) {
+    basketMesh.position.copy(basketBody.position);
+    basketMesh.quaternion.copy(basketBody.quaternion);
 
-  // Verificar colisões e atualizar posições
+    if (scoreZoneBody) {
+      scoreZoneBody.position.copy(basketBody.position);
+      scoreZoneBody.position.y = basketBody.position.y - 1;
+      scoreZoneBody.quaternion.copy(basketBody.quaternion);
+    }
+  }
+
+  // atualizar posições
   for (let i = balls.length - 1; i >= 0; i--) {
     const ball = balls[i];
     const ballData = ballMeshes[i];
@@ -154,49 +221,9 @@ function animate() {
     // Atualizar posição visual
     ballData.mesh.position.copy(ball.position);
     ballData.mesh.quaternion.copy(ball.quaternion);
-
-    // Verificar se a bola entrou na cesta
-    const dx = Math.abs(ball.position.x - basketBody.position.x);
-    const dz = Math.abs(ball.position.z - basketBody.position.z);
-    const dy = ball.position.y - basketBody.position.y;
-
-    // Ajuste nos limites de detecção
-    const dentroDoX = dx < 1.5; // Largura da cesta
-    const dentroDoZ = dz < 1.0; // Profundidade da cesta
-    const dentroDoY = dy > -0.2 && dy < 1.0; // Altura ajustada
-
-    if (dentroDoX && dentroDoZ && dentroDoY) {
-      // Atualizar pontuação baseada no tipo de bola
-      console.log(ball);
-
-      score += ball.ballType.score;
-      scoreElement.textContent = `Pontuação: ${score}`;
-
-      // Efeito visual ao pegar a bola
-      if (ball.ballType === BALL_TYPES.FRUIT) {
-        scoreElement.style.color = "#4CAF50"; // Verde para fruta
-      } else {
-        scoreElement.style.color = "#F44336"; // Vermelho para lixo
-      }
-      setTimeout(() => (scoreElement.style.color = "white"), 300);
-
-      // Remover a bola do jogo
-      world.removeBody(ball);
-      scene.remove(ballData.mesh);
-
-      // Remover das arrays
-      balls.splice(i, 1);
-      ballMeshes.splice(i, 1);
-    }
-    // Remover bolas que caíram muito para baixo
-    else if (ball.position.y < -5) {
-      world.removeBody(ball);
-      scene.remove(ballData.mesh);
-      balls.splice(i, 1);
-      ballMeshes.splice(i, 1);
-    }
   }
 
+  cannonDebugger.update();
   renderer.render(scene, camera);
 }
 

@@ -8,8 +8,8 @@ Projeto desenvolvido para a disciplina de Computação Gráfica do curso de Enge
 - Jose Gabriel Alves de Paula
 - Kaique Damasceno Sousa 
 - Luis Felipe Pereira Furtado
-- Pamela Maria Pontes Frota
-- Vitoria Emilly Santos Melo
+- Pâmela Maria Pontes Frota
+- Vitória Emilly Santos Melo
 
 
 ---
@@ -63,7 +63,7 @@ Este projeto visa implementar um pequeno jogo de "cesta" de bolinhas (usaremos f
     ```
 3.  **Instale as dependências:**
     ```bash
-    npm install
+    npm install three cannon-es cannon-es-debugger
     ```
 4.  **Inicie o servidor de desenvolvimento:**
     ```bash

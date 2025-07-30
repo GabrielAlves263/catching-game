@@ -55,11 +55,11 @@ Este projeto visa implementar um pequeno jogo de "cesta" de bolinhas (usaremos f
 
 1.  **Clone o repositório:**
     ```bash
-    git clone https://github.com/GabrielAlves263/solar-system-threejs.git
+    git clone https://github.com/GabrielAlves263/catching-game.git
     ```
 2.  **Acesse a pasta do projeto:**
     ```bash
-    cd solar-system-threejs
+    cd catching-game
     ```
 3.  **Instale as dependências:**
     ```bash

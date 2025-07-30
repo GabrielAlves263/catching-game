@@ -63,7 +63,7 @@ Este projeto visa implementar um pequeno jogo de "cesta" de bolinhas (usaremos f
     ```
 3.  **Instale as dependências:**
     ```bash
-    npm install
+    npm install three cannon-es cannon-es-debugger
     ```
 4.  **Inicie o servidor de desenvolvimento:**
     ```bash

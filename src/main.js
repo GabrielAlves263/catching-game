@@ -295,7 +295,7 @@ function init() {
     "../public/models/fruit_case.glb",
     function (gltf) {
       basketMesh = gltf.scene;
-      basketMesh.scale.set(8, 10, 5);
+      basketMesh.scale.set(7, 7, 5);
       basketMesh.position.y = 20;
       scene.add(basketMesh);
     },
@@ -326,6 +326,7 @@ function animate() {
   // Atualizar posição visual da cesta
   if (basketMesh && basketBody) {
     basketMesh.position.copy(basketBody.position);
+    basketMesh.position.y = basketBody.position.y + 1;
     basketMesh.quaternion.copy(basketBody.quaternion);
 
     if (scoreZoneBody) {

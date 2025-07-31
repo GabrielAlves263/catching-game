@@ -589,7 +589,7 @@ function init() {
         const characterMesh = charGltf.scene;
 
         // 1. Ajuste a escala do personagem
-        characterMesh.scale.set(0.66, 0.66, 0.66); // Experimente com este valor
+        characterMesh.scale.set(0.55, 0.66, 0.66); // Experimente com este valor
 
         // 2. Posicione o personagem ABAIXO da cesta
         // O valor de Y negativo o move para baixo. Ajuste conforme necessário.

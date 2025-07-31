@@ -9,13 +9,14 @@ import { ambientLight, directionalLight } from "./core/lights";
 import renderer from "./core/renderer";
 import scene from "./core/scene";
 import { groundMesh, world } from "./core/world";
-import { BALL_TYPES } from "./data/ballTypes";
+import { BALL_TYPES, FRUIT_TYPES_ARRAY } from "./data/ballTypes";
 
 // VARIÁVEIS GLOBAIS
 const MAX_BALLS = 20;
 let basketBody, basketMesh;
-const balls = [],
-  ballMeshes = [];
+const balls = [];
+const ballMeshes = [];
+const objectsToRemove = [];
 const keys = {};
 let score = 0,
   scoreElement;
@@ -34,7 +35,7 @@ let startScreen;
 let ballSpawnerInterval;
 
 // Som
-let audioListener, scoreSound, trashSound, top5Sound;
+let audioListener, scoreSound, trashSound, top5Sound, backgroundSound;
 const audioLoader = new AudioLoader();
 
 // Cronômetro
@@ -96,6 +97,8 @@ function startGame() {
   score = 0;
   scoreElement.textContent = `Pontuação: 0`;
   gameTime = 0;
+
+  backgroundSound.play();
 
   startTimer();
   ballSpawnerInterval = setInterval(spawnRandomBall, 1500);
@@ -253,8 +256,13 @@ function addScore() {
 }
 
 function spawnRandomBall() {
-  if (balls.length >= MAX_BALLS) removeOldestBall();
-  const type = Math.random() < 0.7 ? BALL_TYPES.FRUIT : BALL_TYPES.TRASH;
+  let type;
+  if (Math.random() < 0.7) {
+    const randomIndex = Math.floor(Math.random() * FRUIT_TYPES_ARRAY.length);
+    type = FRUIT_TYPES_ARRAY[randomIndex];
+  } else {
+    type = BALL_TYPES.TRASH;
+  }
   spawnBall(type);
 }
 
@@ -266,7 +274,7 @@ function removeOldestBall() {
 }
 
 function spawnBall(type) {
-  const radius = 1;
+  const radius = type.radius;
   const ballBody = new CANNON.Body({
     mass: 1,
     shape: new CANNON.Sphere(radius),
@@ -276,22 +284,25 @@ function spawnBall(type) {
   ballBody.ballType = type;
   world.addBody(ballBody);
 
-  const geometry = new THREE.SphereGeometry(radius, 32, 32);
-  let material;
-  if (type === BALL_TYPES.FRUIT) {
-    const texture = new THREE.TextureLoader().load(
-      "../public/textures/fruit.jpg"
-    );
-    material = new THREE.MeshStandardMaterial({ map: texture });
-  } else {
-    material = new THREE.MeshStandardMaterial({ color: type.color });
+  const sphereGeometry = new THREE.SphereGeometry(radius, 32, 32);
+  let ballMesh;
+
+  if (type.texture) {
+    const textureLoader = new THREE.TextureLoader();
+    const fruitTexture = textureLoader.load(type.texture);
+    fruitTexture.wrapS = THREE.MirroredRepeatWrapping;
+    fruitTexture.wrapT = THREE.MirroredRepeatWrapping;
+    const fruitMaterial = new THREE.MeshStandardMaterial({ map: fruitTexture });
+    ballMesh = new THREE.Mesh(sphereGeometry, fruitMaterial);
+  } else if (type === BALL_TYPES.TRASH) {
+    const trashMaterial = new THREE.MeshStandardMaterial({ color: type.color });
+    ballMesh = new THREE.Mesh(sphereGeometry, trashMaterial);
   }
 
-  const mesh = new THREE.Mesh(geometry, material);
-  scene.add(mesh);
+  scene.add(ballMesh);
 
   balls.push(ballBody);
-  ballMeshes.push({ mesh, type });
+  ballMeshes.push({ mesh: ballMesh, type });
 }
 
 function addTimer() {
@@ -362,27 +373,22 @@ function init() {
 
   scene.add(directionalLight, ambientLight, groundMesh);
 
-  basketBody = new CANNON.Body({ mass: 0, position: new CANNON.Vec3(0, 1, 0) });
-  basketBody.addShape(
-    new CANNON.Box(new CANNON.Vec3(0.01, 1, 2)),
-    new CANNON.Vec3(-2, 0, 0)
-  );
-  basketBody.addShape(
-    new CANNON.Box(new CANNON.Vec3(0.01, 1, 2)),
-    new CANNON.Vec3(2, 0, 0)
-  );
-  basketBody.addShape(
-    new CANNON.Box(new CANNON.Vec3(2, 1, 0.01)),
-    new CANNON.Vec3(0, 0, -2)
-  );
-  basketBody.addShape(
-    new CANNON.Box(new CANNON.Vec3(2, 0.1, 2)),
-    new CANNON.Vec3(0, -1, 0)
-  );
-  basketBody.addShape(
-    new CANNON.Box(new CANNON.Vec3(2, 1, 0.01)),
-    new CANNON.Vec3(0, 0, 2)
-  );
+  const basketLeft = new CANNON.Box(new CANNON.Vec3(0.2, 1, 2));
+  const basketRight = new CANNON.Box(new CANNON.Vec3(0.2, 1, 2));
+  const basketBack = new CANNON.Box(new CANNON.Vec3(2, 1, 0.2));
+  const basketBase = new CANNON.Box(new CANNON.Vec3(2, 0.1, 2));
+  const basketFront = new CANNON.Box(new CANNON.Vec3(2, 1, 0.2));
+
+  basketBody = new CANNON.Body({
+    mass: 0,
+    position: new CANNON.Vec3(0, 1, 0),
+  });
+
+  basketBody.addShape(basketLeft, new CANNON.Vec3(-2, 0, 0));
+  basketBody.addShape(basketRight, new CANNON.Vec3(2, 0, 0));
+  basketBody.addShape(basketBack, new CANNON.Vec3(0, 0, -2));
+  basketBody.addShape(basketBase, new CANNON.Vec3(0, -1, 0));
+  basketBody.addShape(basketFront, new CANNON.Vec3(0, 0, 2));
   world.addBody(basketBody);
 
   audioListener = new AudioListener();
@@ -452,6 +458,12 @@ function init() {
     top5Sound.setVolume(0.2);
   });
 
+  audioLoader.load("../public/sounds/background_music.mp3", (buffer) => {
+    backgroundSound = new Audio(audioListener);
+    backgroundSound.setBuffer(buffer);
+    backgroundSound.setVolume(0.2);
+  });
+
   scoreZoneBody = new CANNON.Body({
     mass: 0,
     shape: new CANNON.Box(new CANNON.Vec3(1, 0.1, 1)),
@@ -460,46 +472,58 @@ function init() {
   });
   world.addBody(scoreZoneBody);
 
-  scoreZoneBody.addEventListener("collide", (event) => {
-    if (!isGameStarted) return;
+  scoreZoneBody.addEventListener("collide", function (event) {
     const ballBody = event.body;
+
     if (ballBody.ballType) {
-      const index = balls.findIndex((b) => b.id === ballBody.id);
-      if (index !== -1) {
-        world.removeBody(balls[index]);
-        scene.remove(ballMeshes[index].mesh);
-        balls.splice(index, 1);
-        ballMeshes.splice(index, 1);
+      if (!objectsToRemove.some((obj) => obj.body.id === ballBody.id)) {
+        const index = balls.findIndex((b) => b.id === ballBody.id);
+        if (index !== -1) {
+          objectsToRemove.push({
+            body: balls[index],
+            mesh: ballMeshes[index].mesh,
+          });
+        }
+
+        score += ballBody.ballType.score;
+        scoreElement.textContent = `Pontuação: ${score}`;
+
+        // Toca o som correspondente
+        if (FRUIT_TYPES_ARRAY.includes(ballBody.ballType) && scoreSound) {
+          scoreSound.play();
+        } else if (ballBody.ballType === BALL_TYPES.TRASH && trashSound) {
+          trashSound.play();
+        }
+
+        scoreElement.style.color =
+          ballBody.ballType.score > 0 ? "#4CAF50" : "#F44336";
+        setTimeout(() => (scoreElement.style.color = "white"), 300);
       }
-      score += ballBody.ballType.score;
-      scoreElement.textContent = `Pontuação: ${score}`;
-      if (ballBody.ballType === BALL_TYPES.FRUIT && scoreSound)
-        scoreSound.play();
-      else if (ballBody.ballType === BALL_TYPES.TRASH && trashSound)
-        trashSound.play();
-      scoreElement.style.color =
-        ballBody.ballType.score > 0 ? "#4CAF50" : "#F44336";
-      setTimeout(() => (scoreElement.style.color = "white"), 300);
     }
   });
 
   const loader = new GLTFLoader();
-  loader.load("../public/models/a_cardboard_box.glb", (gltf) => {
+  loader.load("../public/models/fruit_case.glb", (gltf) => {
     basketMesh = gltf.scene;
-    basketMesh.scale.set(5, 3, 3);
+    basketMesh.scale.set(7, 7, 10);
+    basketMesh.rotation.x = -Math.PI / 2.2;
     scene.add(basketMesh);
   });
 }
 
+const clock = new THREE.Clock();
+
 function animate() {
   requestAnimationFrame(animate);
+
+  const deltaTime = clock.getDelta();
 
   if (!isGameStarted || isPaused) {
     renderer.render(scene, camera);
     return;
   }
 
-  world.step(1 / 60);
+  world.step(1 / 60, deltaTime, 3);
 
   if (keys["ArrowLeft"]) basketBody.position.x -= 0.2;
   if (keys["ArrowRight"]) basketBody.position.x += 0.2;
@@ -507,7 +531,8 @@ function animate() {
 
   if (basketMesh && basketBody) {
     basketMesh.position.copy(basketBody.position);
-    basketMesh.position.y = basketBody.position.y + 1;
+    basketMesh.position.y = basketBody.position.y + 1.13;
+    basketMesh.position.z = basketBody.position.z - 1.5;
     basketMesh.quaternion.copy(basketBody.quaternion);
     if (scoreZoneBody) {
       scoreZoneBody.position.copy(basketBody.position);
@@ -521,6 +546,17 @@ function animate() {
     const { mesh } = ballMeshes[i];
     mesh.position.copy(ball.position);
     mesh.quaternion.copy(ball.quaternion);
+  }
+
+  for (const obj of objectsToRemove) {
+    world.removeBody(obj.body);
+    scene.remove(obj.mesh);
+
+    const index = balls.findIndex((b) => b.id === obj.body.id);
+    if (index !== -1) {
+      balls.splice(index, 1);
+      ballMeshes.splice(index, 1);
+    }
   }
 
   cannonDebugger.update();

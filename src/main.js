@@ -37,7 +37,12 @@ let startScreen;
 let ballSpawnerInterval;
 
 // Som
-let audioListener, scoreSound, trashSound, top5Sound, backgroundSound;
+let audioListener,
+  scoreSound,
+  trashSound,
+  top5Sound,
+  backgroundSound,
+  fireworkSound;
 const audioLoader = new AudioLoader();
 
 // Cronômetro
@@ -395,12 +400,27 @@ function updateTimer() {
     timerElement.style.transform = "scale(1)";
   }
 
-  if (gameTime >= 30) {
+  if (gameTime === 30) top5Sound.stop();
+
+  if (gameTime > 30) {
     stopTimer();
     clearInterval(ballSpawnerInterval);
-    alert(
-      `Parabéns! Você fez ${score} pontos! Pressione R para jogar novamente.`
-    );
+
+    if (score > 10) {
+      createRocketParticles(5);
+      fireworkSound.play();
+    }
+
+    if (score > 20) {
+      createRocketParticles(10);
+      fireworkSound.play();
+    }
+
+    setTimeout(() => {
+      alert(
+        `Parabéns! Você fez ${score} pontos! Pressione R para jogar novamente.`
+      );
+    }, 2000);
   }
 }
 
@@ -461,6 +481,11 @@ function init() {
   basketBody.addShape(basketBack, new CANNON.Vec3(0, 0, -2));
   basketBody.addShape(basketBase, new CANNON.Vec3(0, -1, 0));
   basketBody.addShape(basketFront, new CANNON.Vec3(0, 0, 2));
+
+  const characterShape = new CANNON.Box(new CANNON.Vec3(1.0, 2, 0.5));
+  const characterOffset = new CANNON.Vec3(0, -4, 0);
+  basketBody.addShape(characterShape, characterOffset);
+
   world.addBody(basketBody);
 
   audioListener = new AudioListener();
@@ -527,7 +552,7 @@ function init() {
   audioLoader.load("../public/sounds/top5.mp3", (buffer) => {
     top5Sound = new Audio(audioListener);
     top5Sound.setBuffer(buffer);
-    top5Sound.setVolume(0.2);
+    top5Sound.setVolume(0.1);
   });
 
   audioLoader.load("../public/sounds/background_music.mp3", (buffer) => {
@@ -535,6 +560,12 @@ function init() {
     backgroundSound.setBuffer(buffer);
     backgroundSound.setLoop(true);
     backgroundSound.setVolume(0.2);
+  });
+
+  audioLoader.load("../public/sounds/firework.mp3", (buffer) => {
+    fireworkSound = new Audio(audioListener);
+    fireworkSound.setBuffer(buffer);
+    fireworkSound.setVolume(0.5);
   });
 
   scoreZoneBody = new CANNON.Body({
@@ -652,8 +683,77 @@ function animate() {
     }
   }
 
+  // Atualiza partículas do foguete
+  for (let i = rocketParticles.length - 1; i >= 0; i--) {
+    const { points, velocities, startTime } = rocketParticles[i];
+    const timeElapsed = (Date.now() - startTime) / 1000;
+    const positions = points.geometry.attributes.position.array;
+
+    for (let j = 0; j < positions.length; j += 3) {
+      positions[j] += velocities[j] * deltaTime;
+      positions[j + 1] += velocities[j + 1] * deltaTime;
+      positions[j + 2] += velocities[j + 2] * deltaTime;
+      velocities[j + 1] -= 9.8 * deltaTime;
+    }
+
+    points.geometry.attributes.position.needsUpdate = true;
+
+    if (timeElapsed > 2) {
+      scene.remove(points);
+      rocketParticles.splice(i, 1);
+    }
+  }
+
   cannonDebugger.update();
   renderer.render(scene, camera);
+}
+
+let rocketParticles = [];
+
+function createRocketParticles(amount = 5) {
+  for (let n = 0; n < amount; n++) {
+    const count = 100;
+    const geometry = new THREE.BufferGeometry();
+    const positions = [];
+    const velocities = [];
+    const colors = [];
+
+    for (let i = 0; i < count; i++) {
+      const x = (Math.random() - 0.5) * 0.5;
+      const y = (Math.random() - 0.5) * 0.5;
+      const z = (Math.random() - 0.5) * 0.5;
+      positions.push(x, y, z);
+      velocities.push(x * 2, y * 2 + 5, z * 2);
+
+      const r = Math.random();
+      const g = Math.random();
+      const b = Math.random();
+      colors.push(r, g, b);
+    }
+
+    geometry.setAttribute(
+      "position",
+      new THREE.Float32BufferAttribute(positions, 3)
+    );
+    geometry.setAttribute("color", new THREE.Float32BufferAttribute(colors, 3));
+
+    const particleMaterial = new THREE.PointsMaterial({
+      size: 0.2,
+      vertexColors: true,
+      transparent: true,
+      opacity: 0.9,
+      depthWrite: false,
+    });
+
+    const points = new THREE.Points(geometry, particleMaterial);
+
+    const xPos = (Math.random() - 0.5) * 16; // entre -8 e +8
+    const zPos = (Math.random() - 0.5) * 8; // opcionalmente também no eixo Z
+    points.position.set(xPos, 2, zPos);
+
+    scene.add(points);
+    rocketParticles.push({ points, velocities, startTime: Date.now() });
+  }
 }
 
 init();

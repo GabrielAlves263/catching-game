@@ -1,11 +1,11 @@
 export const BALL_TYPES = {
   APPLE: {
-    score: 1,
+    score: 2,
     radius: 0.8,
     texture: "../public/textures/apple.jpg",
   },
   ORANGE: {
-    score: 2,
+    score: 3,
     radius: 0.7,
     texture: "../public/textures/orange.png",
   },
@@ -15,7 +15,7 @@ export const BALL_TYPES = {
     texture: "../public/textures/watermelon.jpg",
   },
   LEMON: {
-    score: 3,
+    score: 1,
     radius: 0.5,
     texture: "../public/textures/lime.jpg",
   },

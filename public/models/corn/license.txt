@@ -1,0 +1,11 @@
+Model Information:
+* title:	Corn
+* source:	https://sketchfab.com/3d-models/corn-a6483bbaabd24de1b059b493bbc55f17
+* author:	3Dji (https://sketchfab.com/3Dji)
+
+Model License:
+* license type:	CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)
+* requirements:	Author must be credited. Commercial use is allowed.
+
+If you use this 3D model in your project be sure to copy paste this credit wherever you share it:
+This work is based on "Corn" (https://sketchfab.com/3d-models/corn-a6483bbaabd24de1b059b493bbc55f17) by 3Dji (https://sketchfab.com/3Dji) licensed under CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)

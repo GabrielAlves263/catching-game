@@ -14,6 +14,11 @@ export const BALL_TYPES = {
     radius: 1.2,
     texture: "../public/textures/watermelon.jpg",
   },
+  LEMON: {
+    score: 3,
+    radius: 0.5,
+    texture: "../public/textures/lime.jpg",
+  },
   TRASH: {
     score: -5,
     radius: 0.6,
@@ -25,4 +30,5 @@ export const FRUIT_TYPES_ARRAY = [
   BALL_TYPES.APPLE,
   BALL_TYPES.ORANGE,
   BALL_TYPES.WATERMELON,
+  BALL_TYPES.LEMON,
 ];

@@ -461,6 +461,7 @@ function init() {
   audioLoader.load("../public/sounds/background_music.mp3", (buffer) => {
     backgroundSound = new Audio(audioListener);
     backgroundSound.setBuffer(buffer);
+    backgroundSound.setLoop(true);
     backgroundSound.setVolume(0.2);
   });
 

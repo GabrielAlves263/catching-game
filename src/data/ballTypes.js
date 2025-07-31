@@ -22,7 +22,7 @@ export const BALL_TYPES = {
   TRASH: {
     score: -5,
     radius: 0.6,
-    color: 0x8b4513,
+    texture: "../public/textures/chao.jpg",
   },
 };
 

@@ -336,17 +336,12 @@ function spawnBall(type) {
   const sphereGeometry = new THREE.SphereGeometry(radius, 32, 32);
   let ballMesh;
 
-  if (type.texture) {
-    const textureLoader = new THREE.TextureLoader();
-    const fruitTexture = textureLoader.load(type.texture);
-    fruitTexture.wrapS = THREE.MirroredRepeatWrapping;
-    fruitTexture.wrapT = THREE.MirroredRepeatWrapping;
-    const fruitMaterial = new THREE.MeshStandardMaterial({ map: fruitTexture });
-    ballMesh = new THREE.Mesh(sphereGeometry, fruitMaterial);
-  } else if (type === BALL_TYPES.TRASH) {
-    const trashMaterial = new THREE.MeshStandardMaterial({ color: type.color });
-    ballMesh = new THREE.Mesh(sphereGeometry, trashMaterial);
-  }
+  const textureLoader = new THREE.TextureLoader();
+  const fruitTexture = textureLoader.load(type.texture);
+  fruitTexture.wrapS = THREE.MirroredRepeatWrapping;
+  fruitTexture.wrapT = THREE.MirroredRepeatWrapping;
+  const fruitMaterial = new THREE.MeshStandardMaterial({ map: fruitTexture });
+  ballMesh = new THREE.Mesh(sphereGeometry, fruitMaterial);
 
   scene.add(ballMesh);
 

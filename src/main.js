@@ -9,7 +9,7 @@ import camera from "./core/camera";
 import { ambientLight, directionalLight } from "./core/lights";
 import renderer from "./core/renderer";
 import scene from "./core/scene";
-import { groundMesh, world } from "./core/world";
+import { world } from "./core/world";
 import { BALL_TYPES, FRUIT_TYPES_ARRAY } from "./data/ballTypes";
 import "./style.css";
 
@@ -130,6 +130,18 @@ function startGame() {
 
   startTimer();
   ballSpawnerInterval = setInterval(spawnRandomBall, 1500);
+}
+
+function addBackground() {
+  const textureLoader = new THREE.TextureLoader();
+  const backgroundTexture = textureLoader.load(
+    "../public/textures/fundo_feira.png",
+    () => {
+      backgroundTexture.mapping = THREE.UVMapping;
+      scene.background = backgroundTexture;
+      scene.environment = backgroundTexture;
+    }
+  );
 }
 
 // --- FUNÇÃO RESTARTGAME ATUALIZADA ---
@@ -304,7 +316,7 @@ function removeOldestBall() {
 function spawnBall(type) {
   const radius = type.radius;
   const ballBody = new CANNON.Body({
-    mass: 1,
+    mass: 0.5,
     shape: new CANNON.Sphere(radius),
     position: new CANNON.Vec3(
       (Math.random() - 0.5) * 10,
@@ -397,13 +409,41 @@ function stopTimer() {
   timerInterval = null;
 }
 
+function addLimits() {
+  const wallMaterial = new CANNON.Material();
+  const playAreaWidth = 12;
+
+  const leftWall = new CANNON.Body({
+    mass: 0, // Massa 0 torna o corpo estático e imóvel
+    shape: new CANNON.Plane(),
+    material: wallMaterial,
+  });
+
+  leftWall.quaternion.setFromEuler(0, Math.PI / 2, 0);
+  // Posiciona a parede na borda esquerda da área de jogo
+  leftWall.position.set(-playAreaWidth, 0, 0);
+  world.addBody(leftWall);
+
+  const rightWall = new CANNON.Body({
+    mass: 0,
+    shape: new CANNON.Plane(),
+    material: wallMaterial,
+  });
+
+  rightWall.quaternion.setFromEuler(0, -Math.PI / 2, 0);
+  rightWall.position.set(playAreaWidth, 0, 0);
+  world.addBody(rightWall);
+}
+
 function init() {
   createStartScreen();
   createPauseOverlay();
   addScore();
   addTimer();
+  addBackground();
+  addLimits();
 
-  scene.add(directionalLight, ambientLight, groundMesh);
+  scene.add(directionalLight, ambientLight);
 
   const basketLeft = new CANNON.Box(new CANNON.Vec3(0.2, 1, 2));
   const basketRight = new CANNON.Box(new CANNON.Vec3(0.2, 1, 2));
@@ -541,6 +581,26 @@ function init() {
     basketMesh.scale.set(7, 7, 10);
     basketMesh.rotation.x = -Math.PI / 2.2;
     scene.add(basketMesh);
+
+    const characterLoader = new GLTFLoader();
+    characterLoader.load(
+      "../public/models/hands_up.glb", // 👈 Altere para o caminho do seu modelo
+      (charGltf) => {
+        const characterMesh = charGltf.scene;
+
+        // 1. Ajuste a escala do personagem
+        characterMesh.scale.set(0.66, 0.66, 0.66); // Experimente com este valor
+
+        // 2. Posicione o personagem ABAIXO da cesta
+        // O valor de Y negativo o move para baixo. Ajuste conforme necessário.
+        characterMesh.position.y = -1;
+        characterMesh.position.z = 0.1;
+
+        // 3. (MUITO IMPORTANTE) Adiciona o personagem como FILHO da cesta
+        // Isso faz com que ele se mova junto com a cesta automaticamente.
+        basketMesh.add(characterMesh);
+      }
+    );
   });
 }
 

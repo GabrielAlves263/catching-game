@@ -402,7 +402,7 @@ function updateTimer() {
 
   if (gameTime === 30) top5Sound.stop();
 
-  if (gameTime > 30) {
+  if (gameTime >= 30) {
     stopTimer();
     clearInterval(ballSpawnerInterval);
 

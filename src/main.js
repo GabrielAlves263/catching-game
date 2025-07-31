@@ -2,6 +2,7 @@
 import * as CANNON from "cannon-es";
 import CannonDebugger from "cannon-es-debugger";
 import * as THREE from "three";
+import { Audio, AudioListener, AudioLoader } from "three";
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 import camera from "./core/camera";
 import { ambientLight, directionalLight } from "./core/lights";
@@ -9,14 +10,15 @@ import renderer from "./core/renderer";
 import scene from "./core/scene";
 import { groundMesh, world } from "./core/world";
 import { BALL_TYPES } from "./data/ballTypes";
-import { AudioLoader, AudioListener, Audio } from 'three';
 
 // VARIÁVEIS GLOBAIS
 const MAX_BALLS = 20;
 let basketBody, basketMesh;
-const balls = [], ballMeshes = [];
+const balls = [],
+  ballMeshes = [];
 const keys = {};
-let score = 0, scoreElement;
+let score = 0,
+  scoreElement;
 let scoreZoneBody;
 const debugMeshes = [];
 let isDebugOn = false;
@@ -36,7 +38,10 @@ let audioListener, scoreSound, trashSound, top5Sound;
 const audioLoader = new AudioLoader();
 
 // Cronômetro
-let startTime, gameTime = 0, timerInterval, timerElement;
+let startTime,
+  gameTime = 0,
+  timerInterval,
+  timerElement;
 
 const cannonDebugger = new CannonDebugger(scene, world, {
   onInit(body, mesh) {
@@ -115,12 +120,12 @@ function restartGame() {
   // 3. ZERA OS PONTOS E O TIMER DIRETAMENTE
   score = 0;
   gameTime = 0;
-  scoreElement.textContent = 'Pontuação: 0';
-  scoreElement.style.color = 'white';
-  timerElement.textContent = 'Tempo: 00:00';
-  timerElement.style.color = 'white';
-  timerElement.style.fontWeight = 'normal';
-  timerElement.style.transform = 'scale(1)';
+  scoreElement.textContent = "Pontuação: 0";
+  scoreElement.style.color = "white";
+  timerElement.textContent = "Tempo: 00:00";
+  timerElement.style.color = "white";
+  timerElement.style.fontWeight = "normal";
+  timerElement.style.transform = "scale(1)";
 
   // 4. Reseta a posição da cesta
   basketBody.position.set(0, 1, 0);
@@ -135,15 +140,14 @@ function restartGame() {
   ballSpawnerInterval = setInterval(spawnRandomBall, 1500);
 }
 
-
 function pauseAllSounds() {
-  [scoreSound, trashSound, top5Sound].forEach(sound => {
+  [scoreSound, trashSound, top5Sound].forEach((sound) => {
     if (sound && sound.isPlaying) sound.pause();
   });
 }
 
 function resumeAllSounds() {
-  [scoreSound, trashSound, top5Sound].forEach(sound => {
+  [scoreSound, trashSound, top5Sound].forEach((sound) => {
     if (sound && sound.source && !sound.isPlaying) sound.play();
   });
 }
@@ -164,7 +168,8 @@ function createPauseOverlay() {
   pauseOverlay.style.color = "white";
   pauseOverlay.style.fontFamily = "Arial";
   pauseOverlay.style.zIndex = "1000";
-  pauseOverlay.innerHTML = '<img src="icons/pause.png" alt="Pause" style="width: 80px; height: 80px;"> <span style="margin-left: 20px;">Jogo Pausado</span>';
+  pauseOverlay.innerHTML =
+    '<img src="icons/pause.png" alt="Pause" style="width: 80px; height: 80px;"> <span style="margin-left: 20px;">Jogo Pausado</span>';
 
   const restartHint = document.createElement("div");
   restartHint.style.fontSize = "24px";
@@ -220,18 +225,17 @@ window.addEventListener("keydown", (e) => {
     togglePause();
   }
 
-  if ((e.key === 'r' || e.key === 'R') && isGameStarted) {
+  if ((e.key === "r" || e.key === "R") && isGameStarted) {
     restartGame();
   }
 
   if (e.key === "d") {
     isDebugOn = !isDebugOn;
-    debugMeshes.forEach(mesh => mesh.visible = isDebugOn);
+    debugMeshes.forEach((mesh) => (mesh.visible = isDebugOn));
   }
 });
 
-window.addEventListener("keyup", (e) => keys[e.key] = false);
-
+window.addEventListener("keyup", (e) => (keys[e.key] = false));
 
 function addScore() {
   scoreElement = document.createElement("div");
@@ -275,7 +279,9 @@ function spawnBall(type) {
   const geometry = new THREE.SphereGeometry(radius, 32, 32);
   let material;
   if (type === BALL_TYPES.FRUIT) {
-    const texture = new THREE.TextureLoader().load("../public/textures/fruit.jpg");
+    const texture = new THREE.TextureLoader().load(
+      "../public/textures/fruit.jpg"
+    );
     material = new THREE.MeshStandardMaterial({ map: texture });
   } else {
     material = new THREE.MeshStandardMaterial({ color: type.color });
@@ -289,17 +295,17 @@ function spawnBall(type) {
 }
 
 function addTimer() {
-  timerElement = document.createElement('div');
-  timerElement.style.position = 'absolute';
-  timerElement.style.top = '60px';
-  timerElement.style.left = '20px';
-  timerElement.style.color = 'white';
-  timerElement.style.fontSize = '24px';
-  timerElement.style.fontFamily = 'Arial';
-  timerElement.style.backgroundColor = 'rgba(0,0,0,0.5)';
-  timerElement.style.padding = '10px';
-  timerElement.style.borderRadius = '5px';
-  timerElement.textContent = 'Tempo: 00:00';
+  timerElement = document.createElement("div");
+  timerElement.style.position = "absolute";
+  timerElement.style.top = "60px";
+  timerElement.style.left = "20px";
+  timerElement.style.color = "white";
+  timerElement.style.fontSize = "24px";
+  timerElement.style.fontFamily = "Arial";
+  timerElement.style.backgroundColor = "rgba(0,0,0,0.5)";
+  timerElement.style.padding = "10px";
+  timerElement.style.borderRadius = "5px";
+  timerElement.textContent = "Tempo: 00:00";
   document.body.appendChild(timerElement);
 }
 
@@ -315,27 +321,31 @@ function updateTimer() {
 
   const minutes = Math.floor(gameTime / 60);
   const seconds = gameTime % 60;
-  timerElement.textContent = `Tempo: ${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+  timerElement.textContent = `Tempo: ${minutes
+    .toString()
+    .padStart(2, "0")}:${seconds.toString().padStart(2, "0")}`;
 
   if (30 - gameTime <= 5 && 30 - gameTime >= 1) {
-    timerElement.style.color = '#FF5722';
-    timerElement.style.fontWeight = 'bold';
-    timerElement.style.transform = 'scale(1.2)';
-    timerElement.style.transition = 'all 0.3s ease';
+    timerElement.style.color = "#FF5722";
+    timerElement.style.fontWeight = "bold";
+    timerElement.style.transform = "scale(1.2)";
+    timerElement.style.transition = "all 0.3s ease";
 
     if (30 - gameTime === 5 && top5Sound && !top5Sound.isPlaying) {
       top5Sound.play();
     }
   } else {
-    timerElement.style.color = 'white';
-    timerElement.style.fontWeight = 'normal';
-    timerElement.style.transform = 'scale(1)';
+    timerElement.style.color = "white";
+    timerElement.style.fontWeight = "normal";
+    timerElement.style.transform = "scale(1)";
   }
 
   if (gameTime >= 30) {
     stopTimer();
     clearInterval(ballSpawnerInterval);
-    alert(`Parabéns! Você fez ${score} pontos! Pressione R para jogar novamente.`);
+    alert(
+      `Parabéns! Você fez ${score} pontos! Pressione R para jogar novamente.`
+    );
   }
 }
 
@@ -353,11 +363,26 @@ function init() {
   scene.add(directionalLight, ambientLight, groundMesh);
 
   basketBody = new CANNON.Body({ mass: 0, position: new CANNON.Vec3(0, 1, 0) });
-  basketBody.addShape(new CANNON.Box(new CANNON.Vec3(0.01, 1, 2)), new CANNON.Vec3(-2, 0, 0));
-  basketBody.addShape(new CANNON.Box(new CANNON.Vec3(0.01, 1, 2)), new CANNON.Vec3(2, 0, 0));
-  basketBody.addShape(new CANNON.Box(new CANNON.Vec3(2, 1, 0.01)), new CANNON.Vec3(0, 0, -2));
-  basketBody.addShape(new CANNON.Box(new CANNON.Vec3(2, 0.1, 2)), new CANNON.Vec3(0, -1, 0));
-  basketBody.addShape(new CANNON.Box(new CANNON.Vec3(2, 1, 0.01)), new CANNON.Vec3(0, 0, 2));
+  basketBody.addShape(
+    new CANNON.Box(new CANNON.Vec3(0.01, 1, 2)),
+    new CANNON.Vec3(-2, 0, 0)
+  );
+  basketBody.addShape(
+    new CANNON.Box(new CANNON.Vec3(0.01, 1, 2)),
+    new CANNON.Vec3(2, 0, 0)
+  );
+  basketBody.addShape(
+    new CANNON.Box(new CANNON.Vec3(2, 1, 0.01)),
+    new CANNON.Vec3(0, 0, -2)
+  );
+  basketBody.addShape(
+    new CANNON.Box(new CANNON.Vec3(2, 0.1, 2)),
+    new CANNON.Vec3(0, -1, 0)
+  );
+  basketBody.addShape(
+    new CANNON.Box(new CANNON.Vec3(2, 1, 0.01)),
+    new CANNON.Vec3(0, 0, 2)
+  );
   world.addBody(basketBody);
 
   audioListener = new AudioListener();
@@ -384,7 +409,10 @@ function init() {
       const raycaster = new THREE.Raycaster();
       raycaster.setFromCamera(mouse, camera);
 
-      const planeY = new THREE.Plane(new THREE.Vector3(0, 1, 0), -basketBody.position.y);
+      const planeY = new THREE.Plane(
+        new THREE.Vector3(0, 1, 0),
+        -basketBody.position.y
+      );
       const intersection = new THREE.Vector3();
 
       raycaster.ray.intersectPlane(planeY, intersection);
@@ -394,7 +422,6 @@ function init() {
         basketBody.position.x = Math.max(-8, Math.min(8, newX)); // Limites da tela
       }
     });
-
 
     const raycaster = new THREE.Raycaster();
     raycaster.setFromCamera(mouse, camera);
@@ -407,20 +434,19 @@ function init() {
     }
   });
 
-
-  audioLoader.load('../public/sounds/score.mp3', buffer => {
+  audioLoader.load("../public/sounds/score.mp3", (buffer) => {
     scoreSound = new Audio(audioListener);
     scoreSound.setBuffer(buffer);
     scoreSound.setVolume(0.5);
   });
 
-  audioLoader.load('../public/sounds/trash.mp3', buffer => {
+  audioLoader.load("../public/sounds/trash.mp3", (buffer) => {
     trashSound = new Audio(audioListener);
     trashSound.setBuffer(buffer);
     trashSound.setVolume(1.0);
   });
 
-  audioLoader.load('../public/sounds/top5.mp3', buffer => {
+  audioLoader.load("../public/sounds/top5.mp3", (buffer) => {
     top5Sound = new Audio(audioListener);
     top5Sound.setBuffer(buffer);
     top5Sound.setVolume(0.2);
@@ -438,7 +464,7 @@ function init() {
     if (!isGameStarted) return;
     const ballBody = event.body;
     if (ballBody.ballType) {
-      const index = balls.findIndex(b => b.id === ballBody.id);
+      const index = balls.findIndex((b) => b.id === ballBody.id);
       if (index !== -1) {
         world.removeBody(balls[index]);
         scene.remove(ballMeshes[index].mesh);
@@ -447,10 +473,13 @@ function init() {
       }
       score += ballBody.ballType.score;
       scoreElement.textContent = `Pontuação: ${score}`;
-      if (ballBody.ballType === BALL_TYPES.FRUIT && scoreSound) scoreSound.play();
-      else if (ballBody.ballType === BALL_TYPES.TRASH && trashSound) trashSound.play();
-      scoreElement.style.color = ballBody.ballType.score > 0 ? "#4CAF50" : "#F44336";
-      setTimeout(() => scoreElement.style.color = "white", 300);
+      if (ballBody.ballType === BALL_TYPES.FRUIT && scoreSound)
+        scoreSound.play();
+      else if (ballBody.ballType === BALL_TYPES.TRASH && trashSound)
+        trashSound.play();
+      scoreElement.style.color =
+        ballBody.ballType.score > 0 ? "#4CAF50" : "#F44336";
+      setTimeout(() => (scoreElement.style.color = "white"), 300);
     }
   });
 
@@ -460,8 +489,6 @@ function init() {
     basketMesh.scale.set(5, 3, 3);
     scene.add(basketMesh);
   });
-
-
 }
 
 function animate() {
@@ -480,6 +507,7 @@ function animate() {
 
   if (basketMesh && basketBody) {
     basketMesh.position.copy(basketBody.position);
+    basketMesh.position.y = basketBody.position.y + 1;
     basketMesh.quaternion.copy(basketBody.quaternion);
     if (scoreZoneBody) {
       scoreZoneBody.position.copy(basketBody.position);

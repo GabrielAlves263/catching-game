@@ -32,9 +32,53 @@ Este projeto visa implementar um pequeno jogo de "cesta" de bolinhas (usaremos f
 
 ## Funcionalidades Implementadas
 
-- [ Em construção...]
-- [...]
+### Controles
+- **Teclado**:
+  - `← →` Movimenta a cesta
+  - `Espaço` Pausa/despausa
+  - `R` Reinicia o jogo
+  - `D` Ativa modo debug
+- **Mouse**:
+  - Arraste para mover a cesta
 
+### Mecânicas Principais
+- Sistema físico com:
+  - Gravidade ajustável (-9.82 a -100)
+  - Colisões realistas
+  - Comportamentos físicos diferenciados
+- Sistema de pontuação:
+  - Frutas: +1 a +3 pontos
+  - Lixo: -2 pontos
+- Partidas cronometradas (30 segundos)
+
+### Interface
+- Telas interativas:
+  - Início
+  - Pause
+  - Game Over
+- Elementos visuais:
+  - Placar dinâmico
+  - Cronômetro
+  - Efeitos especiais
+
+### Sistemas Técnicos
+- Geração procedural de objetos:
+  - 5 tipos de frutas
+  - 3 tipos de lixo
+- Gerenciamento automático:
+  - Limite de 20 objetos
+  - Remoção de itens antigos
+- Efeitos de partículas:
+  - Fogos de artifício (highscores)
+  - Explosões visuais
+
+### Dificuldade
+| Nível   | Gravidade | Velocidade |
+|---------|-----------|------------|
+| Fácil   | -9.82     | 10         |
+| Médio   | -30       | 25         |
+| Difícil | -60       | 40         |
+| Insano  | -100      | 70         |
 
 ---
 

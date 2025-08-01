@@ -149,9 +149,6 @@ function addBackground() {
   );
 }
 
-// --- FUNÇÃO RESTARTGAME ATUALIZADA ---
-// Agora esta função é a única responsável por reiniciar o jogo,
-// zerando os pontos e o timer diretamente.
 function restartGame() {
   // 1. Para todos os processos do jogo
   stopTimer();
